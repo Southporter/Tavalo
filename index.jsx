@@ -1,3 +1,3 @@
-import Trigo from './src/Trigo.jsx';
+import Tavalo from './src/Tavalo.jsx';
 
-export default Trigo;
+export default Tavalo;

@@ -28,6 +28,7 @@
 		"webpack-cli": "^2.0.13"
 	},
 	"dependencies": {
+		"styled-components": "^3.2.3",
 		"webpack": "^4.3.0"
 	}
 }

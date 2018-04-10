@@ -51,11 +51,19 @@ const ReadOnly = styled.div`
 `;
 
 class Cell extends PureComponent {
-	handleFocus = () => {
-		console.debug('handling focus', this.props);
-		const { updateFocus, row, column } = this.props;
-		updateFocus(row, column);
+	handleMouseDown = () => {
+		const { onMouseDown, row, column } = this.props;
+		onMouseDown(row, column);
 	}
+	handleMouseUp = () => {
+		const { onMouseUp, row, column } = this.props;
+		onMouseUp(row, column);
+	}
+	hanldeMouseOver = () => {
+		const { onMouseMove, row, column } = this.props;
+		onMouseMove(row, column);
+	}
+
 	render() {
 		const { children } = this.props;
 
@@ -74,7 +82,12 @@ class Cell extends PureComponent {
 		}
 		return (
 			<Td {...this.props}>
-				<Input onFocus={this.handleFocus} defaultValue={children} />
+				<Input
+					defaultValue={children}
+					onMouseDown={this.handleMouseDown}
+					onMouseUp={this.handleMouseUp}
+					onMouseOver={this.handleMouseOver}
+					/>
 			</Td>
 		);
 	}

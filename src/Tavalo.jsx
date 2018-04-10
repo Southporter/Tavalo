@@ -22,6 +22,8 @@ class Tavalo extends Component {
 
 		console.info('setting state', props);
 
+		this.isDragging = false;
+
 		this.state = {
 			data: [],
 			size: {
@@ -35,13 +37,47 @@ class Tavalo extends Component {
 		}
 	}
 
-	updateFocus = (row, column) => {
-		console.info('Table updateFocus', row, column);
-		this.setState((state) => ({
-			...state,
-			row: [ row, row ],
-			column: [ column, column ],
-		}), console.info(this.state));
+	setSelected = (rowEnd, colEnd) => {
+		if (rowEnd && colEnd) {
+			this.setState((state) => ({
+				...state,
+				selected: {
+					row: [ state.selected.row[0], rowEnd ],
+					column: [ state.selected.column[0], colEnd ],
+				},
+			}));
+		}
+	}
+
+	setAllSelected = (row, column) => {
+		if (row && column) {
+			this.setState((state) => ({
+				...state,
+				selected: {
+					row: [ row, row ],
+					column: [ column, column ],
+				},
+			}));
+		}
+	}
+
+	onDragStart = (row, column) => {
+		console.info('drag start');
+		this.isDragging = true;
+		this.setAllSelected(row, column);
+	}
+
+	onDragEnd = (row, column) => {
+		console.info('drag end');
+		this.isDragging = false;
+		this.setSelected(row, column);
+	}
+
+	duringDrag = (row, column) => {
+		console.info('during drag', this.isDragging);
+		if (this.isDragging) {
+			this.setSelected(row, column);
+		}
 	}
 
 	handleCopy(event) {}
@@ -75,7 +111,9 @@ class Tavalo extends Component {
 					key={generateKey()}
 					row={row}
 					column={i}
-					updateFocus={this.updateFocus}
+					onMouseDown={this.onDragStart}
+					onMouseUp={this.onDragEnd}
+					onMouseMove={this.duringDrag}
 					{...this.state}
 					>
 					{data[i]}
@@ -135,7 +173,6 @@ class Tavalo extends Component {
 	}
 
 	render() {
-		console.info('render', this.state.data);
 		const { size, data } = this.state;
 		if (!this.props.children) {
 			return (

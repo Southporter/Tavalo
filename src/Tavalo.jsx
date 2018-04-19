@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { number } from 'prop-types';
 import styled from 'styled-components';
-import ErrorBoundary from './components/ErrorBoundary';
 import Table from './components/Table';
 import Row from './components/Row';
 import Cell from './components/Cell';
@@ -13,6 +12,9 @@ const Container = styled.div`
 	width: 100%;
 	height: 100%;
 	overflow: scroll;
+	& * {
+		cursor: cell;
+	}
 `;
 
 
@@ -22,9 +24,8 @@ class Tavalo extends Component {
 
 		console.info('setting state', props);
 
-		this.isDragging = false;
-
 		this.state = {
+			hasError: false,
 			data: [],
 			size: {
 				rows: props.rows,
@@ -34,13 +35,21 @@ class Tavalo extends Component {
 				row: [1, 1],
 				column: [2, 2],
 			},
+			isDragging: false,
 		}
 	}
 
-	setSelected = (rowEnd, colEnd) => {
+	componentDidCatch(error, info) {
+		console.info('Error in Tavolo:', error, info);
+		this.setState({ hasError: true });
+	}
+
+	setSelected = (rowEnd, colEnd, isDragging = false) => {
+		console.info('setting selected', isDragging);
 		if (rowEnd && colEnd) {
 			this.setState((state) => ({
 				...state,
+				isDragging,
 				selected: {
 					row: [ state.selected.row[0], rowEnd ],
 					column: [ state.selected.column[0], colEnd ],
@@ -53,6 +62,7 @@ class Tavalo extends Component {
 		if (row && column) {
 			this.setState((state) => ({
 				...state,
+				isDragging: true,
 				selected: {
 					row: [ row, row ],
 					column: [ column, column ],
@@ -62,22 +72,15 @@ class Tavalo extends Component {
 	}
 
 	onDragStart = (row, column) => {
-		console.info('drag start');
-		this.isDragging = true;
 		this.setAllSelected(row, column);
 	}
 
 	onDragEnd = (row, column) => {
-		console.info('drag end');
-		this.isDragging = false;
 		this.setSelected(row, column);
 	}
 
 	duringDrag = (row, column) => {
-		console.info('during drag', this.isDragging);
-		if (this.isDragging) {
-			this.setSelected(row, column);
-		}
+		this.setSelected(row, column, true);
 	}
 
 	handleCopy(event) {}
@@ -93,35 +96,6 @@ class Tavalo extends Component {
 		});
 	}
 
-	generateCells(size, row, data = []) {
-		const cells = [
-			<Cell
-				key={generateKey()}
-				row={row}
-				readonly
-				column={-1}
-				{...this.state}
-				>
-				{row}
-			</Cell>
-		];
-		for (let i = 0; i < size.columns; i++) {
-			cells.push(
-				<Cell
-					key={generateKey()}
-					row={row}
-					column={i}
-					onMouseDown={this.onDragStart}
-					onMouseUp={this.onDragEnd}
-					onMouseMove={this.duringDrag}
-					{...this.state}
-					>
-					{data[i]}
-				</Cell>
-			);
-		}
-		return cells;
-	}
 
 	generateRows(size, data) {
 		const rows = [];
@@ -130,9 +104,16 @@ class Tavalo extends Component {
 				<Row
 					key={generateKey()}
 					index={i}
+					data={data[i - 1]}
+					row={i}
+					columns={size.columns}
+					onDragStart={this.onDragStart}
+					onDragEnd={this.onDragEnd}
+					duringDrag={this.duringDrag}
+					isDragging={this.state.isDragging}
+					selected={this.state.selected}
 					{...this.state}
 					>
-					{this.generateCells(size, i, data[i - 1])}
 				</Row>
 			)
 		}
@@ -168,29 +149,33 @@ class Tavalo extends Component {
 			<Row index={0} {...this.state}>
 				{cells}
 			</Row>
-		)
-
+		);
 	}
 
 	render() {
 		const { size, data } = this.state;
+		if (this.state.hasError) {
+			return <h2>
+				:( Sad day...
+				Tavalo ran into an error. We sent a report to our developers and will hopefully get if fixed soon.
+				Sorry about that.
+				</h2>;
+		}
 		if (!this.props.children) {
 			return (
-				<ErrorBoundary>
-					<Container
-						onCopy={this.handleCopy.bind(this)}
-						onPaste={this.handlePaste.bind(this)}
-						>
-						<Table {...this.state}>
-							<thead>
-								{this.generateHeader()}
-							</thead>
-							<tbody>
-								{this.generateRows(size, data)}
-							</tbody>
-						</Table>
-					</Container>
-				</ErrorBoundary>
+				<Container
+					onCopy={this.handleCopy.bind(this)}
+					onPaste={this.handlePaste.bind(this)}
+					>
+					<Table {...this.state}>
+						<thead>
+							{this.generateHeader()}
+						</thead>
+						<tbody>
+							{this.generateRows(size, data)}
+						</tbody>
+					</Table>
+				</Container>
 			);
 		}
 		return (

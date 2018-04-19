@@ -40,17 +40,22 @@ const Td = styled.td`
 `;
 const Input = styled.input`
 	min-height: 20px;
-	border: none;
+	border: blue;
 	&:focus {
 		outline: none;
 	}
 `;
 const ReadOnly = styled.div`
 	min-height: 20px;
+	min-width: 60px;
 	${props => props.strong ? 'font-weight: bold' : ''}
 `;
 
 class Cell extends PureComponent {
+	state = {
+		isEditing: false,
+	}
+
 	handleMouseDown = () => {
 		const { onMouseDown, row, column } = this.props;
 		onMouseDown(row, column);
@@ -59,9 +64,16 @@ class Cell extends PureComponent {
 		const { onMouseUp, row, column } = this.props;
 		onMouseUp(row, column);
 	}
-	hanldeMouseOver = () => {
-		const { onMouseMove, row, column } = this.props;
-		onMouseMove(row, column);
+	handleMouseOver = () => {
+		const { onMouseMove, row, column, isDragging } = this.props;
+		console.info('isDragging', isDragging);
+		if (isDragging) onMouseMove(row, column);
+	}
+	handleDoubleClick = () => {
+		console.info('handling double click');
+		this.setState((state) => ({
+			isEditing: true,
+		}));
 	}
 
 	render() {
@@ -73,10 +85,17 @@ class Cell extends PureComponent {
 					<ReadOnly strong={true}>{children}</ReadOnly>
 				</Th>
 			);
-		} else if (this.props.readonly) {
+		} else if (this.props.readonly || !this.state.isEditing) {
 			return (
 				<Td {...this.props}>
-					<ReadOnly>{children}</ReadOnly>
+					<ReadOnly
+						onMouseDown={this.handleMouseDown}
+						onMouseUp={this.handleMouseUp}
+						onMouseEnter={this.handleMouseOver}
+						onDoubleClick={this.handleDoubleClick}
+						>
+						{children}
+					</ReadOnly>
 				</Td>
 			);
 		}
@@ -86,7 +105,7 @@ class Cell extends PureComponent {
 					defaultValue={children}
 					onMouseDown={this.handleMouseDown}
 					onMouseUp={this.handleMouseUp}
-					onMouseOver={this.handleMouseOver}
+					onMouseEnter={this.handleMouseOver}
 					/>
 			</Td>
 		);

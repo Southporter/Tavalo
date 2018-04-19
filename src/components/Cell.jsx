@@ -92,7 +92,6 @@ class Cell extends PureComponent {
 						onMouseDown={this.handleMouseDown}
 						onMouseUp={this.handleMouseUp}
 						onMouseEnter={this.handleMouseOver}
-						onDoubleClick={this.handleDoubleClick}
 						>
 						{children}
 					</ReadOnly>
